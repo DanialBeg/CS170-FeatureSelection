@@ -1,4 +1,7 @@
 import csv
+import math
+import sys
+import numpy as np
 import pandas as pd
 
 
@@ -15,8 +18,7 @@ def main():
     algo = int(input('Type the number of the algorithm you want to run:\n'
                      '\n1. Foward Selection'
                      '\n2. Backward Elimination\n\n'))
-    print('\nThis dataset has ' + str(r1) + ' features.\n\n'
-                                            'Please wait while I normalize the data!')
+    print('\nThis dataset has ' + str(r1) + ' features.\n\n')
 
     # search(r1)
     return kfold(in_f, r1)
@@ -49,7 +51,7 @@ def leave_one_out_cross_validation():
     return 0
 
 
-def kfold(inf, rl):
+def kfold(inf, c):
     # Reading in CSV into dataframe:
     # https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html
     df = pd.read_csv(inf, header=None)
@@ -57,13 +59,32 @@ def kfold(inf, rl):
 
     for i in range(0, nr):
         df[0][i] = df[0][i].split()
-    print(df[0][0][1])
-    for j in range(0, rl):
-        print(df[0][0][j])
 
-    for i in range(0, nr):
-        obj_classify = df[0][i][1:rl]
-        label_obj_classify = df[0][i][0]
+    for k in range(1, nr+1):
+        obj_classify = df[0][k-1][1:c]
+        label_obj_classify = df[0][k-1][0]
+        # print(label_obj_classify)
+
+        nearest_n_dist = sys.maxsize
+        nearest_n_loc = sys.maxsize
+
+        for l in range(1, nr+1):
+            if k != l:
+                # print(str(k) + ' ' + str(l))
+                sum_mnhtn = 0
+                for m in range(len(obj_classify)):
+                    sum_mnhtn += int(np.power(float(obj_classify[m]) - float(df[0][l-1][1:c][m]), 2))
+                    # print(df[0][l-1][1:c][m])
+                # print('Dist')
+                dist = math.sqrt(sum_mnhtn)
+                # print(str(l) + ' ' + str(dist))
+                # Made this <= instead of < to match the output from the briefing video
+                if dist <= nearest_n_dist:
+                    nearest_n_dist = dist
+                    nearest_n_loc = l
+                    nearest_n_label = df[0][nearest_n_loc-1][0]
+        print('Object ' + str(k) + ' is class ' + str(int(float(label_obj_classify))))
+        print('Nearest neighbor is ' + str(nearest_n_loc) + ' is class ' + str(int(float(nearest_n_label))))
 
     return 0
 
