@@ -8,7 +8,7 @@ import pandas as pd
 
 def main():
     print('Welcome to Danial Beg\'s Feature Selection Algorithm!')
-    f = 'CS170_largetestdata__35.txt'
+    f = 'CS170_small_special_testdata__99.txt'
     print('\nType in the name of the file to test: ')
     in_f = f
     f = open(f, 'r')
@@ -54,7 +54,7 @@ def forward_search(inf, rl):
         seen_features.add(finalk)
         s_c = copy.deepcopy(seen_features)
         d[f_accur] = s_c
-        print('Feature set ' + str(seen_features) + ' was best, accuracy is ' + str(f_accur))
+        print('Feature set ' + str(seen_features) + ' was best, accuracy is ' + str(f_accur) + '\n')
         # print(d)
     print('\n')
     print('Finished search!! The best feature subset is ' + str(d[max(d.keys())]) +
@@ -63,7 +63,43 @@ def forward_search(inf, rl):
 
 
 def backward_search(inf, rl):
-    print('Hi')
+    seen_features = set()
+    for j in range(1, rl):
+        seen_features.add(j)
+    d = {}
+
+    s_temp = copy.deepcopy(seen_features)
+    accur = leave_one_out_cross_validation(inf, rl, s_temp)
+    print('Using feature(s) ' + str(s_temp) + ' accuracy is ' + str(accur))
+    print('Feature set ' + str(s_temp) + ' was best, accuracy is ' + str(accur) + '\n')
+
+    for i in range(2, rl):
+        max_accur = 0
+        finalk = 0
+
+        for k in range(1, rl):
+            if k in seen_features:
+                s_temp = copy.deepcopy(seen_features)
+                s_temp.remove(k)
+                accur = leave_one_out_cross_validation(inf, rl, s_temp)
+                k_temp = k
+                print('Using feature(s) ' + str(s_temp) + ' accuracy is ' + str(accur))
+
+                # print(seen_features)
+
+            if accur >= max_accur:
+                max_accur = accur
+                f_accur = accur
+                finalk = k_temp
+                # print('K is ' + str(k))
+        seen_features.remove(finalk)
+        s_c = copy.deepcopy(seen_features)
+        d[f_accur] = s_c
+        print('Feature set ' + str(seen_features) + ' was best, accuracy is ' + str(f_accur) + '\n')
+        # print(d)
+    print('\n')
+    print('Finished search!! The best feature subset is ' + str(d[max(d.keys())]) +
+          ' which has an accuracy of ' + str(max(d.keys())))
 
 
 def leave_one_out_cross_validation(inf, c, seen):
@@ -71,13 +107,14 @@ def leave_one_out_cross_validation(inf, c, seen):
     # https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html
     df = pd.read_csv(inf, header=None)
     nr = len(df.index)
-    # print(c)
-    corr_classified = 0
 
     for i in range(0, nr):
         df[0][i] = df[0][i].split()
 
     df_c = df.copy()
+
+    nr = len(df_c.index)
+    corr_classified = 0
 
     for a in range(1, c):
         if a not in seen:
