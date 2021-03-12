@@ -8,7 +8,7 @@ import pandas as pd
 
 def main():
     print('Welcome to Danial Beg\'s Feature Selection Algorithm!')
-    f = 'CS170_small_special_testdata__96.txt'
+    f = 'CS170_largetestdata__35.txt'
     print('\nType in the name of the file to test: ')
     in_f = f
     f = open(f, 'r')
@@ -22,10 +22,14 @@ def main():
                      '\n2. Backward Elimination\n\n'))
     print('\nThis dataset has ' + str(r1) + ' features.\n\n')
 
-    return search(in_f, r1)
+    if algo == 1:
+        return forward_search(in_f, r1)
+    elif algo == 2:
+        return backward_search(in_f, r1)
+    return 'Incorrect input'
 
 
-def search(inf, rl):
+def forward_search(inf, rl):
     seen_features = set()
     d = {}
 
@@ -56,6 +60,10 @@ def search(inf, rl):
     print('Finished search!! The best feature subset is ' + str(d[max(d.keys())]) +
           ' which has an accuracy of ' + str(max(d.keys())))
     # print(d)
+
+
+def backward_search(inf, rl):
+    print('Hi')
 
 
 def leave_one_out_cross_validation(inf, c, seen):
