@@ -8,7 +8,7 @@ import pandas as pd
 
 def main():
     print('Welcome to Danial Beg\'s Feature Selection Algorithm!')
-    f = 'CS170_small_special_testdata__99.txt'
+    f = 'CS170_largetestdata__35.txt'
     print('\nType in the name of the file to test: ')
     in_f = f
     f = open(f, 'r')
@@ -35,30 +35,42 @@ def forward_search(inf, rl):
 
     for i in range(1, rl):
         max_accur = 0
-        finalk = 0
-        for k in range(1, rl):
-            if k not in seen_features:
+        finalj = 0
+        for j in range(1, rl):
+            if j not in seen_features:
                 s_temp = copy.deepcopy(seen_features)
-                s_temp.add(k)
-                accur = leave_one_out_cross_validation(inf, rl, s_temp)
-                k_temp = k
-                print('Using feature(s) ' + str(s_temp) + ' accuracy is ' + str(accur))
+                s_temp.add(j)
 
-                # print(seen_features)
+                # Reading in CSV into dataframe:
+                # https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html
+                df = pd.read_csv(inf, header=None)
+                nr = len(df.index)
+
+                for k in range(0, nr):
+                    df[0][k] = df[0][k].split()
+
+                df_c = df.copy(deep=True)
+                accur = leave_one_out_cross_validation(rl, s_temp, df_c)
+                j_temp = j
+
+                # Printing float as a nice percent:
+                # https://www.kite.com/python/answers/how-to-print-a-float-with-two-decimal-places-in-python
+                print('Using feature(s) ' + str(s_temp) + ' accuracy is ' + "{:.1%}".format(accur))
 
             if accur >= max_accur:
                 max_accur = accur
                 f_accur = accur
-                finalk = k_temp
-                # print('K is ' + str(k))
-        seen_features.add(finalk)
+                finalj = j_temp
+        seen_features.add(finalj)
         s_c = copy.deepcopy(seen_features)
         d[f_accur] = s_c
-        print('Feature set ' + str(seen_features) + ' was best, accuracy is ' + str(f_accur) + '\n')
-        # print(d)
+
+        # Printing float as a nice percent:
+        # https://www.kite.com/python/answers/how-to-print-a-float-with-two-decimal-places-in-python
+        print('Feature set ' + str(seen_features) + ' was best, accuracy is ' + "{:.1%}".format(f_accur) + '\n')
     print('\n')
     print('Finished search!! The best feature subset is ' + str(d[max(d.keys())]) +
-          ' which has an accuracy of ' + str(max(d.keys())))
+          ' which has an accuracy of ' + "{:.1%}".format(max(d.keys())))
     # print(d)
 
 
@@ -69,50 +81,67 @@ def backward_search(inf, rl):
     d = {}
 
     s_temp = copy.deepcopy(seen_features)
-    accur = leave_one_out_cross_validation(inf, rl, s_temp)
-    print('Using feature(s) ' + str(s_temp) + ' accuracy is ' + str(accur))
-    print('Feature set ' + str(s_temp) + ' was best, accuracy is ' + str(accur) + '\n')
 
-    for i in range(2, rl):
-        max_accur = 0
-        finalk = 0
-
-        for k in range(1, rl):
-            if k in seen_features:
-                s_temp = copy.deepcopy(seen_features)
-                s_temp.remove(k)
-                accur = leave_one_out_cross_validation(inf, rl, s_temp)
-                k_temp = k
-                print('Using feature(s) ' + str(s_temp) + ' accuracy is ' + str(accur))
-
-                # print(seen_features)
-
-            if accur >= max_accur:
-                max_accur = accur
-                f_accur = accur
-                finalk = k_temp
-                # print('K is ' + str(k))
-        seen_features.remove(finalk)
-        s_c = copy.deepcopy(seen_features)
-        d[f_accur] = s_c
-        print('Feature set ' + str(seen_features) + ' was best, accuracy is ' + str(f_accur) + '\n')
-        # print(d)
-    print('\n')
-    print('Finished search!! The best feature subset is ' + str(d[max(d.keys())]) +
-          ' which has an accuracy of ' + str(max(d.keys())))
-
-
-def leave_one_out_cross_validation(inf, c, seen):
     # Reading in CSV into dataframe:
     # https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html
     df = pd.read_csv(inf, header=None)
     nr = len(df.index)
 
-    for i in range(0, nr):
-        df[0][i] = df[0][i].split()
+    for k in range(0, nr):
+        df[0][k] = df[0][k].split()
 
-    df_c = df.copy()
+    df_c = df.copy(deep=True)
 
+    accur = leave_one_out_cross_validation(rl, s_temp, df_c)
+
+    # Printing float as a nice percent:
+    # https://www.kite.com/python/answers/how-to-print-a-float-with-two-decimal-places-in-python
+    print('Using feature(s) ' + str(s_temp) + ' accuracy is ' + "{:.1%}".format(accur))
+    print('Feature set ' + str(s_temp) + ' was best, accuracy is ' + "{:.1%}".format(accur) + '\n')
+
+    for i in range(2, rl):
+        max_accur = 0
+        finalj = 0
+
+        for j in range(1, rl):
+            if j in seen_features:
+                s_temp = copy.deepcopy(seen_features)
+                s_temp.remove(j)
+
+                # Reading in CSV into dataframe:
+                # https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html
+                df = pd.read_csv(inf, header=None)
+                nr = len(df.index)
+
+                for k in range(0, nr):
+                    df[0][k] = df[0][k].split()
+
+                df_c = df.copy(deep=True)
+
+                accur = leave_one_out_cross_validation(rl, s_temp, df_c)
+                j_temp = j
+
+                # Printing float as a nice percent:
+                # https://www.kite.com/python/answers/how-to-print-a-float-with-two-decimal-places-in-python
+                print('Using feature(s) ' + str(s_temp) + ' accuracy is ' + "{:.1%}".format(accur))
+
+            if accur >= max_accur:
+                max_accur = accur
+                f_accur = accur
+                finalj =j_temp
+        seen_features.remove(finalj)
+        s_c = copy.deepcopy(seen_features)
+        d[f_accur] = s_c
+
+        # Printing float as a nice percent:
+        # https://www.kite.com/python/answers/how-to-print-a-float-with-two-decimal-places-in-python
+        print('Feature set ' + str(seen_features) + ' was best, accuracy is ' + "{:.1%}".format(f_accur) + '\n')
+    print('\n')
+    print('Finished search!! The best feature subset is ' + str(d[max(d.keys())]) +
+          ' which has an accuracy of ' + "{:.1%}".format(max(d.keys())))
+
+
+def leave_one_out_cross_validation(c, seen, df_c):
     nr = len(df_c.index)
     corr_classified = 0
 
@@ -120,11 +149,16 @@ def leave_one_out_cross_validation(inf, c, seen):
         if a not in seen:
             for b in range(nr):
                 df_c[0][b][a] = '0'
-    # print(df_c[0][288])
+
+    df = df_c.copy(deep=True)
+
+    n = df.to_numpy()
+    df_c = n
+    # print(df_c[0][0][1:c])
 
     for k in range(nr):
-        obj_classify = df_c[0][k][1:c]
-        label_obj_classify = df_c[0][k][0]
+        obj_classify = df_c[k][0][1:c]
+        label_obj_classify = df_c[k][0][0]
 
         nearest_n_dist = sys.maxsize
         nearest_n_loc = sys.maxsize
@@ -133,13 +167,16 @@ def leave_one_out_cross_validation(inf, c, seen):
             sum_mnhtn = 0
             if k != l:
                 for m in range(len(obj_classify)):
-                    sum_mnhtn += np.power(float(obj_classify[m]) - float(df_c[0][l][1:c][m]), 2)
+                    # if float(df_c[l][0][m+1]) != 0.0:
+                    #     print(float(obj_classify[m]))
+                    # float(df_c[l][0][1:c][m]
+                    sum_mnhtn += (float(obj_classify[m]) - float(df_c[l][0][m+1]))**2
                 dist = math.sqrt(sum_mnhtn)
                 # Made this <= instead of < to match the output from the briefing video
                 if dist <= nearest_n_dist:
                     nearest_n_dist = dist
                     nearest_n_loc = l+1
-                    nearest_n_label = df_c[0][nearest_n_loc-1][0]
+                    nearest_n_label = df_c[nearest_n_loc-1][0][0]
         if label_obj_classify == nearest_n_label:
             corr_classified += 1
         # print('Object ' + str(k) + ' is class ' + str(int(float(label_obj_classify))))
