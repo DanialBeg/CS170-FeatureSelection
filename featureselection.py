@@ -3,12 +3,13 @@ import math
 import copy
 import sys
 import numpy as np
+import time
 import pandas as pd
 
 
 def main():
     print('Welcome to Danial Beg\'s Feature Selection Algorithm!')
-    f = 'CS170_largetestdata__35.txt'
+    f = 'CS170_small_special_testdata__95.txt'
     print('\nType in the name of the file to test: ')
     in_f = f
     f = open(f, 'r')
@@ -30,6 +31,7 @@ def main():
 
 
 def forward_search(inf, rl):
+    start = time.time()
     seen_features = set()
     d = {}
 
@@ -68,13 +70,14 @@ def forward_search(inf, rl):
         # Printing float as a nice percent:
         # https://www.kite.com/python/answers/how-to-print-a-float-with-two-decimal-places-in-python
         print('Feature set ' + str(seen_features) + ' was best, accuracy is ' + "{:.1%}".format(f_accur) + '\n')
-    print('\n')
     print('Finished search!! The best feature subset is ' + str(d[max(d.keys())]) +
-          ' which has an accuracy of ' + "{:.1%}".format(max(d.keys())))
+          ' which has an accuracy of ' + "{:.1%}".format(max(d.keys())) + '\n')
+    print('Time used: ' + str(round(time.time()-start, 2)) + ' seconds.')
     # print(d)
 
 
 def backward_search(inf, rl):
+    start = time.time()
     seen_features = set()
     for j in range(1, rl):
         seen_features.add(j)
@@ -138,22 +141,24 @@ def backward_search(inf, rl):
         print('Feature set ' + str(seen_features) + ' was best, accuracy is ' + "{:.1%}".format(f_accur) + '\n')
     print('\n')
     print('Finished search!! The best feature subset is ' + str(d[max(d.keys())]) +
-          ' which has an accuracy of ' + "{:.1%}".format(max(d.keys())))
+          ' which has an accuracy of ' + "{:.1%}".format(max(d.keys())) + '\n')
+    print('Time used: ' + str(round(time.time()-start, 2)) + ' seconds.')
 
 
 def leave_one_out_cross_validation(c, seen, df_c):
     nr = len(df_c.index)
     corr_classified = 0
 
-    for a in range(1, c):
-        if a not in seen:
-            for b in range(nr):
-                df_c[0][b][a] = '0'
-
     df = df_c.copy(deep=True)
 
     n = df.to_numpy()
     df_c = n
+
+    for a in range(1, c):
+        if a not in seen:
+            for b in range(nr):
+                df_c[b][0][a] = '0'
+
     # print(df_c[0][0][1:c])
 
     for k in range(nr):
