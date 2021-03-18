@@ -9,8 +9,7 @@ import pandas as pd
 
 def main():
     print('Welcome to Danial Beg\'s Feature Selection Algorithm!')
-    f = 'CS170_small_special_testdata__95.txt'
-    print('\nType in the name of the file to test: ')
+    f = input('\nType in the name of the file to test: ')
     in_f = f
     f = open(f, 'r')
 
@@ -21,8 +20,9 @@ def main():
     algo = int(input('Type the number of the algorithm you want to run:\n'
                      '\n1. Foward Selection'
                      '\n2. Backward Elimination\n\n'))
-    print('\nThis dataset has ' + str(r1) + ' features.\n\n')
+    print('\nThis dataset has ' + str(r1-1) + ' features.\n\n')
 
+    # Choosing a search technique
     if algo == 1:
         return forward_search(in_f, r1)
     elif algo == 2:
@@ -40,18 +40,19 @@ def forward_search(inf, rl):
         finalj = 0
         for j in range(1, rl):
             if j not in seen_features:
+                # We need to deep copy as Python does pass by reference for function calls
                 s_temp = copy.deepcopy(seen_features)
+
+                # Temporarily add the row we're looking at into the set
                 s_temp.add(j)
 
-                # Reading in CSV into dataframe:
-                # https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html
-                df = pd.read_csv(inf, header=None)
+                # Reading in file into dataframe:
+                # https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_fwf.html
+                df = pd.read_fwf(inf, header=None)
                 nr = len(df.index)
 
-                for k in range(0, nr):
-                    df[0][k] = df[0][k].split()
-
-                df_c = df.copy(deep=True)
+                # Deep copy the dataframe as it will get updated in the function
+                df_c = df.copy(deep=True)[:-1]
                 accur = leave_one_out_cross_validation(rl, s_temp, df_c)
                 j_temp = j
 
@@ -59,10 +60,13 @@ def forward_search(inf, rl):
                 # https://www.kite.com/python/answers/how-to-print-a-float-with-two-decimal-places-in-python
                 print('Using feature(s) ' + str(s_temp) + ' accuracy is ' + "{:.1%}".format(accur))
 
-            if accur >= max_accur:
-                max_accur = accur
-                f_accur = accur
-                finalj = j_temp
+                # Update the max accuracy if we find a better accuracy, update the index too
+                if accur >= max_accur:
+                    max_accur = accur
+                    f_accur = accur
+                    finalj = j_temp
+
+        # Add best column in the set, for real
         seen_features.add(finalj)
         s_c = copy.deepcopy(seen_features)
         d[f_accur] = s_c
@@ -70,10 +74,10 @@ def forward_search(inf, rl):
         # Printing float as a nice percent:
         # https://www.kite.com/python/answers/how-to-print-a-float-with-two-decimal-places-in-python
         print('Feature set ' + str(seen_features) + ' was best, accuracy is ' + "{:.1%}".format(f_accur) + '\n')
+
     print('Finished search!! The best feature subset is ' + str(d[max(d.keys())]) +
           ' which has an accuracy of ' + "{:.1%}".format(max(d.keys())) + '\n')
     print('Time used: ' + str(round(time.time()-start, 2)) + ' seconds.')
-    # print(d)
 
 
 def backward_search(inf, rl):
@@ -83,15 +87,13 @@ def backward_search(inf, rl):
         seen_features.add(j)
     d = {}
 
+    # Do the first iteration of a full set outside the loop
     s_temp = copy.deepcopy(seen_features)
 
-    # Reading in CSV into dataframe:
-    # https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html
-    df = pd.read_csv(inf, header=None)
+    # Reading in file into dataframe:
+    # https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_fwf.html
+    df = pd.read_fwf(inf, header=None)
     nr = len(df.index)
-
-    for k in range(0, nr):
-        df[0][k] = df[0][k].split()
 
     df_c = df.copy(deep=True)
 
@@ -108,17 +110,17 @@ def backward_search(inf, rl):
 
         for j in range(1, rl):
             if j in seen_features:
+                # We need to deep copy as Python does pass by reference for function calls
                 s_temp = copy.deepcopy(seen_features)
+                # Temporarily remove from the set
                 s_temp.remove(j)
 
-                # Reading in CSV into dataframe:
-                # https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_csv.html
-                df = pd.read_csv(inf, header=None)
+                # Reading in file into dataframe:
+                # https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_fwf.html
+                df = pd.read_fwf(inf, header=None)
                 nr = len(df.index)
 
-                for k in range(0, nr):
-                    df[0][k] = df[0][k].split()
-
+                # Deep copy the dataframe as it will get updated in the function
                 df_c = df.copy(deep=True)
 
                 accur = leave_one_out_cross_validation(rl, s_temp, df_c)
@@ -128,10 +130,13 @@ def backward_search(inf, rl):
                 # https://www.kite.com/python/answers/how-to-print-a-float-with-two-decimal-places-in-python
                 print('Using feature(s) ' + str(s_temp) + ' accuracy is ' + "{:.1%}".format(accur))
 
-            if accur >= max_accur:
-                max_accur = accur
-                f_accur = accur
-                finalj =j_temp
+                # Update the max accuracy if we find a better accuracy, update the index too
+                if accur >= max_accur:
+                    max_accur = accur
+                    f_accur = accur
+                    finalj =j_temp
+
+        # Remove the column for real this time
         seen_features.remove(finalj)
         s_c = copy.deepcopy(seen_features)
         d[f_accur] = s_c
@@ -151,37 +156,41 @@ def leave_one_out_cross_validation(c, seen, df_c):
 
     df = df_c.copy(deep=True)
 
+    # Convert dataframe to Numpy array to make it run faster
     n = df.to_numpy()
     df_c = n
 
+    # Make columns we're not looking at full of 0's
     for a in range(1, c):
         if a not in seen:
-            for b in range(nr):
-                df_c[b][0][a] = '0'
+            df_c[:, a] = 0.0
 
-    # print(df_c[0][0][1:c])
-
+    # Go through every row and compute the distances
     for k in range(nr):
-        obj_classify = df_c[k][0][1:c]
-        label_obj_classify = df_c[k][0][0]
+        # Take a subsection of the array and its corresponding label
+        obj_classify = df_c[k][1:c]
+        label_obj_classify = df_c[k][0]
 
         nearest_n_dist = sys.maxsize
         nearest_n_loc = sys.maxsize
 
         for l in range(nr):
-            sum_mnhtn = 0
+            dist = 0
+
+            # If we're not on the same row, compute the distance and update it if it's closer
             if k != l:
-                for m in range(len(obj_classify)):
-                    # if float(df_c[l][0][m+1]) != 0.0:
-                    #     print(float(obj_classify[m]))
-                    # float(df_c[l][0][1:c][m]
-                    sum_mnhtn += (float(obj_classify[m]) - float(df_c[l][0][m+1]))**2
-                dist = math.sqrt(sum_mnhtn)
+                d = {}
+
+                # Using Numpy to add the arrays in one line
+                dist = math.sqrt(np.sum(np.power(obj_classify - df_c[l][1:c], 2)))
+
                 # Made this <= instead of < to match the output from the briefing video
                 if dist <= nearest_n_dist:
                     nearest_n_dist = dist
-                    nearest_n_loc = l+1
-                    nearest_n_label = df_c[nearest_n_loc-1][0][0]
+                    nearest_n_loc = l + 1
+                    nearest_n_label = df_c[nearest_n_loc - 1][0]
+
+        # If we correctly classify, increase the correct counter
         if label_obj_classify == nearest_n_label:
             corr_classified += 1
         # print('Object ' + str(k) + ' is class ' + str(int(float(label_obj_classify))))
